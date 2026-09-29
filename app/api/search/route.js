@@ -18,7 +18,6 @@ export async function GET(req) {
 
   const livePortals = {
     registries: REGISTRIES.filter((r) => !country || r.code === country || r.code === "GLOBAL" || r.code === "LEI" || r.code.startsWith(country))
-      .slice(0, 14)
       .map((r) => ({ name: r.name, country: r.country, url: r.search(q), home: r.url })),
     sanctions: SANCTIONS_PLATFORMS.map((s) => ({ name: s.name, owner: s.owner, url: s.search(q), home: s.url })),
     trade: TRADE_PLATFORMS.map((s) => ({ name: s.name, note: s.note, url: s.search(q), home: s.url })),
