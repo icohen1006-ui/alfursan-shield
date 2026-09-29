@@ -1,0 +1,48 @@
+import { searchFrance, searchGleif, searchNorway, searchOpenSanctions, searchWikidata } from "../../../lib/live";
+import { REGISTRIES, SANCTIONS_PLATFORMS, TRADE_PLATFORMS, jurisdictionRisk } from "../../../lib/catalog";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const q = (searchParams.get("q") || "").trim();
+  const country = (searchParams.get("country") || "").trim().toUpperCase();
+  if (q.length < 2) {
+    return Response.json({ error: "Enter at least 2 characters." }, { status: 400 });
+  }
+
+  const [gleif, wiki, fr, no, os] = await Promise.all([
+    searchGleif(q, country || undefined),
+    searchWikidata(q),
+    country === "FR" || !country ? searchFrance(q) : Promise.resolve({ rows: [], ok: true, skipped: true }),
+    country === "NO" ? searchNorway(q) : Promise.resolve({ rows: [], ok: true, skipped: true }),
+    searchOpenSanctions(q),
+  ]);
+
+  const livePortals = {
+    registries: REGISTRIES.filter((r) => !country || r.code === country || r.code === "GLOBAL" || r.code === "LEI")
+      .slice(0, 10)
+      .map((r) => ({ name: r.name, country: r.country, url: r.search(q), home: r.url })),
+    sanctions: SANCTIONS_PLATFORMS.map((s) => ({ name: s.name, owner: s.owner, url: s.search(q), home: s.url })),
+    trade: TRADE_PLATFORMS.map((s) => ({ name: s.name, note: s.note, url: s.search(q), home: s.url })),
+  };
+
+  return Response.json({
+    query: q,
+    country: country || null,
+    checkedAt: new Date().toISOString(),
+    jurisdictionHint: country ? jurisdictionRisk(country) : null,
+    sources: {
+      gleif: { live: gleif.ok, status: gleif.status, count: gleif.rows.length, error: gleif.error || null },
+      wikidata: { live: wiki.ok, status: wiki.status, count: wiki.rows.length },
+      france: { live: fr.ok, status: fr.status, count: (fr.rows || []).length, skipped: !!fr.skipped },
+      norway: { live: no.ok, status: no.status, count: (no.rows || []).length, skipped: !!no.skipped },
+      opensanctions: { live: os.ok, configured: os.configured, count: (os.rows || []).length, portal: os.portal },
+    },
+    companies: gleif.rows,
+    national: [...(fr.rows || []), ...(no.rows || [])],
+    encyclopedia: wiki.rows,
+    watchlistHits: os.rows || [],
+    livePortals,
+  });
+}
