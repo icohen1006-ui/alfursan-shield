@@ -168,8 +168,8 @@ export default function VerifyPage() {
                           </div>
                           <div style={{ display: "grid", gap: 8 }}>
                             <button className="secondary" onClick={() => {
-                              const source = c.siren ? "fr" : c.orgnr ? "no" : c.cik ? "us" : c.number ? "gb" : "";
-                              const id = c.siren || c.orgnr || c.cik || c.number;
+                              const source = c.siren ? "fr" : c.orgnr ? "no" : c.cik ? "us" : c.number ? "gb" : (c.country === "EG" || (c.source || "").includes("Egypt")) ? "eg" : "";
+                              const id = c.siren || c.orgnr || c.cik || c.number || c.lei || c.id;
                               const params = {};
                               if (source && id) { params.source = source; params.id = id; }
                               if (c.lei) params.lei = c.lei;
@@ -186,14 +186,13 @@ export default function VerifyPage() {
                             ))}
                           </div>
                         )}
-                        {c.financials?.length > 0 && (
+                        {c.egyptPack && (
                           <div style={{ marginTop: 10 }}>
-                            <div className="muted">Accounts</div>
-                            {c.financials.slice(0, 3).map((f) => (
-                              <div key={f.year}>FY {f.year} · revenue {money(f.revenue, f.currency)} · net {money(f.netIncome, f.currency)}</div>
-                            ))}
+                            <div className="muted">{c.egyptPack.registry}</div>
+                            {c.egyptPack.identifiers.map((x) => <div key={x}>{x}</div>)}
                           </div>
                         )}
+                        {c.note && <p className="muted">{c.note}</p>}
                       </article>
                     ))}
                   </div>
@@ -241,6 +240,13 @@ export default function VerifyPage() {
                         {file.filings.slice(0, 8).map((f, i) => (
                           <div key={i}>{f.filed || f.date} · {f.form || f.type} · {f.description || ""}</div>
                         ))}
+                      </>
+                    )}
+                    {file?.egyptPack && (
+                      <>
+                        <div className="muted" style={{ marginTop: 10 }}>Egypt KYB pack</div>
+                        <div>{file.egyptPack.registry}</div>
+                        {[...file.egyptPack.identifiers, ...file.egyptPack.control].map((x) => <div key={x}>{x}</div>)}
                       </>
                     )}
                     {file?.note && <p className="muted">{file.note}</p>}

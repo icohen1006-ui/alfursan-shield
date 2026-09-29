@@ -17,6 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Syne:wght@500;700&display=swap" rel="stylesheet" />
@@ -31,11 +32,14 @@ export default function RootLayout({ children }) {
                 <span>AL FURSAN Ltd · Cairo · global produce</span>
               </div>
             </Link>
-            <nav>
-              {links.map(([href, label]) => (
-                <Link key={href} href={href}>{label}</Link>
-              ))}
-            </nav>
+            <details className="navwrap">
+              <summary className="navtoggle">Menu</summary>
+              <nav>
+                {links.map(([href, label]) => (
+                  <Link key={href} href={href}>{label}</Link>
+                ))}
+              </nav>
+            </details>
           </header>
           {children}
         </div>

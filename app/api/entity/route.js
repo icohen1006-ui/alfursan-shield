@@ -1,4 +1,4 @@
-import { getCompaniesHouseFile, getLeiGraph, getSecProfile, searchFrance, searchNorway } from "../../../lib/live";
+import { EGYPT_PACK, getCompaniesHouseFile, getLeiGraph, getSecProfile, searchEgypt, searchFrance, searchNorway } from "../../../lib/live";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +51,20 @@ export async function GET(req) {
     }));
     out.filings = out.sec.filings || [];
     out.note = out.sec.ownersNote;
+  }
+
+  if (source === "eg") {
+    if (id && /^[A-Z0-9]{20}$/i.test(id) && !lei) {
+      const graph = await getLeiGraph(id.toUpperCase());
+      out.gleif = graph;
+      if (graph.ultimateParent) out.owners.push({ name: graph.ultimateParent.name, role: "Ultimate parent (GLEIF)", lei: graph.ultimateParent.lei, country: graph.ultimateParent.country });
+      if (graph.parent) out.owners.push({ name: graph.parent.name, role: "Direct parent (GLEIF)", lei: graph.parent.lei, country: graph.parent.country });
+    } else {
+      const eg = await searchEgypt(id || "Egypt");
+      out.national = eg.rows[0] || null;
+    }
+    out.egyptPack = EGYPT_PACK;
+    out.note = "Directors and PSC for most Egyptian private companies sit on the Mostakhrag extract, not on a public API. Collect the extract, tax card and signatory list into this file.";
   }
 
   if ((source === "gb" || source === "uk") && id) {

@@ -246,3 +246,89 @@ th { font-family: "Syne", sans-serif; font-size: 11px; letter-spacing: .08em; te
 @media (max-width: 860px) {
   .hero, .grid, .grid-2, .searchbar, .check { grid-template-columns: 1fr; }
 }
+
+.navtoggle { display: none; }
+
+@media (max-width: 860px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+  .shell {
+    padding: 0 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  .topbar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 0 6px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--paper) 92%, white);
+    backdrop-filter: blur(10px);
+  }
+  .brand b { font-size: 13px; }
+  .brand span { font-size: 11px; max-width: 42vw; }
+  .navwrap {
+    width: 100%;
+  }
+  .navtoggle {
+    display: inline-flex;
+    list-style: none;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 999px;
+    padding: 10px 16px;
+    font-family: "Syne", sans-serif;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .navtoggle::-webkit-details-marker { display: none; }
+  .navwrap nav {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+  }
+  .navwrap[open] nav { display: flex; flex-direction: column; }
+  .navwrap nav a {
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  h1 { font-size: 32px; }
+  .lede { font-size: 16px; }
+  .searchbar {
+    grid-template-columns: 1fr;
+  }
+  .searchbar input,
+  .searchbar select,
+  .searchbar button {
+    width: 100%;
+    min-height: 48px;
+  }
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .row > div[style],
+  .row a,
+  .row button {
+    width: 100%;
+  }
+  button, .btn {
+    min-height: 44px;
+    width: 100%;
+  }
+  .chips { gap: 6px; }
+  .pill { font-size: 10px; }
+  table { font-size: 12px; display: block; overflow-x: auto; }
+  .score-ring { width: 120px; height: 120px; }
+}
+
+@media (min-width: 861px) {
+  .navwrap { display: contents; }
+  .navtoggle { display: none; }
+}

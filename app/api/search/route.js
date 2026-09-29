@@ -39,7 +39,9 @@ export async function GET(req) {
     encyclopedia: wiki.rows,
     watchlistHits: os.rows || [],
     livePortals,
-    coverageNote: country && !["FR", "NO", "US", "GB", "UK"].includes(country)
+    coverageNote: country === "EG"
+      ? "Egypt is live: GLEIF for any Egyptian LEI, plus GAFI, commercial registry, tax card and NFSA rooms. Private companies without an LEI still need a current Mostakhrag extract for directors and owners."
+      : country && !["FR", "NO", "US", "GB", "UK", "EG"].includes(country)
       ? "Identity is live via GLEIF for this country. Directors, PSC and accounts come from the official national register room on the right, plus any LEI parent/child graph."
       : null,
   });
