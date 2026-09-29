@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { COUNTRIES } from "../../lib/catalog";
 
 function saveCase(payload) {
   const id = payload.id || `AF-${Date.now()}`;
@@ -22,6 +23,13 @@ function saveCase(payload) {
   return id;
 }
 
+function money(n, ccy) {
+  if (n == null || n === "") return "—";
+  const num = Number(n);
+  if (Number.isNaN(num)) return String(n);
+  return `${ccy || ""} ${num.toLocaleString()}`.trim();
+}
+
 export default function VerifyPage() {
   const [q, setQ] = useState("");
   const [country, setCountry] = useState("");
@@ -30,12 +38,15 @@ export default function VerifyPage() {
   const [data, setData] = useState(null);
   const [vatRes, setVatRes] = useState(null);
   const [error, setError] = useState("");
+  const [file, setFile] = useState(null);
+  const [fileLoading, setFileLoading] = useState(false);
 
   async function run(e) {
     e?.preventDefault();
     setLoading(true);
     setError("");
     setVatRes(null);
+    setFile(null);
     try {
       const url = `/api/search?q=${encodeURIComponent(q)}${country ? `&country=${country}` : ""}`;
       const res = await fetch(url);
@@ -46,6 +57,19 @@ export default function VerifyPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function openFile(params) {
+    setFileLoading(true);
+    try {
+      const qs = new URLSearchParams(params);
+      const res = await fetch(`/api/entity?${qs.toString()}`);
+      setFile(await res.json());
+    } catch (err) {
+      setFile({ error: err.message });
+    } finally {
+      setFileLoading(false);
     }
   }
 
@@ -60,8 +84,7 @@ export default function VerifyPage() {
     return Object.entries(data.sources).map(([k, v]) => ({
       k,
       live: v.live,
-      count: v.count,
-      extra: v.configured === false ? "portal" : v.skipped ? "n/a" : String(v.count),
+      extra: v.configured === false ? "portal" : v.skipped ? "n/a" : String(v.count ?? "—"),
     }));
   }, [data]);
 
@@ -69,14 +92,17 @@ export default function VerifyPage() {
     <main>
       <div className="kicker">Live verification</div>
       <h1>Check any company on earth.</h1>
-      <p className="lede">Type a legal name, trading name or identifier. Shield queries live public APIs and prepares official screening rooms for the same string.</p>
+      <p className="lede">
+        GLEIF covers every country that issued an LEI. France, Norway and US public filers return directors, owners and accounts in-line.
+        UK Companies House officers, PSC and filings activate when a free API key is set. Every other jurisdiction opens its official register room.
+      </p>
 
       <form className="searchbar" onSubmit={run}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Metro AG, Carrefour, Fresh Direct LLC" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Legal name, LEI, SIREN, org.nr or ticker" />
         <select value={country} onChange={(e) => setCountry(e.target.value)}>
           <option value="">All countries</option>
-          {["EG","GB","DE","FR","NL","IT","ES","US","AE","SA","TR","JO","IN","CN","SG","AU","CA","CH","NO","PL","ZA","BR"].map((c) => (
-            <option key={c} value={c}>{c}</option>
+          {COUNTRIES.map(([code, name]) => (
+            <option key={code} value={code}>{code} · {name}</option>
           ))}
         </select>
         <button disabled={loading || q.length < 2}>{loading ? "Checking…" : "Verify"}</button>
@@ -91,12 +117,13 @@ export default function VerifyPage() {
               <span key={s.k} className={`pill ${s.live ? "live" : "warn"}`}>{s.k} · {s.extra}</span>
             ))}
           </div>
+          {data.coverageNote && <div className="card muted" style={{ marginBottom: 16 }}>{data.coverageNote}</div>}
 
           <div className="grid-2">
             <div>
-              <div className="section-title">GLEIF legal entities</div>
+              <div className="section-title">GLEIF legal entities — worldwide</div>
               {data.companies.length === 0 ? (
-                <div className="card muted">No LEI match. That is common for small traders. Use national registries on the right and still open a diligence file.</div>
+                <div className="card muted">No LEI match. Small private traders often have none. Use the national hits below and the official register rooms.</div>
               ) : (
                 <div className="list">
                   {data.companies.map((c) => (
@@ -111,17 +138,9 @@ export default function VerifyPage() {
                         </div>
                       </div>
                       <div style={{ display: "grid", gap: 8 }}>
-                        <a className="btn secondary" href={c.gleifUrl} target="_blank" rel="noreferrer">GLEIF record</a>
+                        <button className="secondary" onClick={() => openFile({ lei: c.lei })}>Directors / parents</button>
                         <button className="gold" onClick={() => {
-                          const id = saveCase({
-                            name: c.name,
-                            lei: c.lei,
-                            country: c.country,
-                            address: c.address,
-                            status: c.status,
-                            snapshot: c,
-                          });
-                          window.location.href = `/diligence?id=${id}`;
+                          window.location.href = `/diligence?id=${saveCase({ name: c.name, lei: c.lei, country: c.country, address: c.address, status: c.status, snapshot: c })}`;
                         }}>Open DD file</button>
                       </div>
                     </article>
@@ -131,39 +150,103 @@ export default function VerifyPage() {
 
               {data.national?.length > 0 && (
                 <>
-                  <div className="section-title">National live registers</div>
+                  <div className="section-title">National registers — directors, PSC, accounts</div>
                   <div className="list">
                     {data.national.map((c, i) => (
-                      <article className="row" key={`${c.source}-${i}`}>
-                        <div>
-                          <h3>{c.name}</h3>
-                          <div className="muted">{c.source} · {c.address}</div>
-                          <div className="chips">
-                            <span className="pill live">{c.status || "live"}</span>
-                            {c.siren && <span className="pill">SIREN {c.siren}</span>}
-                            {c.orgnr && <span className="pill">ORG {c.orgnr}</span>}
+                      <article className="card" key={`${c.source}-${c.id || i}`}>
+                        <div className="row" style={{ boxShadow: "none", padding: 0, border: 0 }}>
+                          <div>
+                            <h3>{c.name}</h3>
+                            <div className="muted">{c.source} · {c.address || c.ticker || ""}</div>
+                            <div className="chips">
+                              <span className="pill live">{c.status || "live"}</span>
+                              {c.siren && <span className="pill">SIREN {c.siren}</span>}
+                              {c.orgnr && <span className="pill">ORG {c.orgnr}</span>}
+                              {c.ticker && <span className="pill">{c.ticker}</span>}
+                              {c.number && <span className="pill">{c.number}</span>}
+                            </div>
+                          </div>
+                          <div style={{ display: "grid", gap: 8 }}>
+                            <button className="secondary" onClick={() => {
+                              const source = c.siren ? "fr" : c.orgnr ? "no" : c.cik ? "us" : c.number ? "gb" : "";
+                              const id = c.siren || c.orgnr || c.cik || c.number;
+                              const params = {};
+                              if (source && id) { params.source = source; params.id = id; }
+                              if (c.lei) params.lei = c.lei;
+                              openFile(params);
+                            }}>Open file</button>
+                            {c.url && <a className="btn secondary" href={c.url} target="_blank" rel="noreferrer">Registry</a>}
                           </div>
                         </div>
-                        <a className="btn secondary" href={c.url} target="_blank" rel="noreferrer">Registry</a>
+                        {c.directors?.length > 0 && (
+                          <div style={{ marginTop: 10 }}>
+                            <div className="muted">Directors / officers</div>
+                            {c.directors.slice(0, 6).map((d, idx) => (
+                              <div key={idx}>{d.name} · {d.role}</div>
+                            ))}
+                          </div>
+                        )}
+                        {c.financials?.length > 0 && (
+                          <div style={{ marginTop: 10 }}>
+                            <div className="muted">Accounts</div>
+                            {c.financials.slice(0, 3).map((f) => (
+                              <div key={f.year}>FY {f.year} · revenue {money(f.revenue, f.currency)} · net {money(f.netIncome, f.currency)}</div>
+                            ))}
+                          </div>
+                        )}
                       </article>
                     ))}
                   </div>
                 </>
               )}
 
-              {data.encyclopedia?.length > 0 && (
+              {(file || fileLoading) && (
                 <>
-                  <div className="section-title">Public knowledge graph</div>
-                  <div className="list">
-                    {data.encyclopedia.map((w) => (
-                      <article className="row" key={w.id}>
-                        <div>
-                          <h3>{w.name}</h3>
-                          <div className="muted">{w.description || "Wikidata entity"}</div>
-                        </div>
-                        <a className="btn secondary" href={w.url} target="_blank" rel="noreferrer">Open</a>
-                      </article>
-                    ))}
+                  <div className="section-title">Company file — control, officers, statements</div>
+                  <div className="card">
+                    {fileLoading && <div className="muted">Loading live file…</div>}
+                    {file?.error && <div className="pill bad">{file.error}</div>}
+                    {file?.gleif?.company && (
+                      <p><strong>{file.gleif.company.name}</strong> · LEI {file.gleif.company.lei} · {file.gleif.company.status}</p>
+                    )}
+                    {file?.owners?.length > 0 && (
+                      <>
+                        <div className="muted">Persons / entities with significant control (GLEIF parents)</div>
+                        {file.owners.map((o) => <div key={o.lei || o.name}>{o.name} · {o.role}</div>)}
+                      </>
+                    )}
+                    {file?.psc?.length > 0 && (
+                      <>
+                        <div className="muted" style={{ marginTop: 10 }}>UK PSC register</div>
+                        {file.psc.map((o, i) => <div key={i}>{o.name} · {(o.natures || []).join(", ")}</div>)}
+                      </>
+                    )}
+                    {file?.directors?.length > 0 && (
+                      <>
+                        <div className="muted" style={{ marginTop: 10 }}>Directors</div>
+                        {file.directors.map((d, i) => <div key={i}>{d.name} · {d.role}{d.appointed ? ` · from ${d.appointed}` : ""}</div>)}
+                      </>
+                    )}
+                    {file?.financials?.length > 0 && (
+                      <>
+                        <div className="muted" style={{ marginTop: 10 }}>Financial statements</div>
+                        {file.financials.map((f, i) => (
+                          <div key={i}>FY {f.year} · revenue {money(f.revenue, f.currency)} · assets {money(f.assets, f.currency)} · net {money(f.netIncome, f.currency)}</div>
+                        ))}
+                      </>
+                    )}
+                    {file?.filings?.length > 0 && (
+                      <>
+                        <div className="muted" style={{ marginTop: 10 }}>Filed accounts / disclosures</div>
+                        {file.filings.slice(0, 8).map((f, i) => (
+                          <div key={i}>{f.filed || f.date} · {f.form || f.type} · {f.description || ""}</div>
+                        ))}
+                      </>
+                    )}
+                    {file?.note && <p className="muted">{file.note}</p>}
+                    {file?.uk && file.uk.configured === false && (
+                      <p className="muted">Add COMPANIES_HOUSE_API_KEY on Vercel to pull UK officers, PSC and filing history automatically. The Companies House room still works without it.</p>
+                    )}
                   </div>
                 </>
               )}
@@ -172,7 +255,7 @@ export default function VerifyPage() {
             <aside>
               <div className="section-title">Sanctions rooms</div>
               <div className="card">
-                <p className="muted">Each link is the official live search for this name. Record a clear / possible / confirmed hit on the DD file.</p>
+                <p className="muted">Official live search for this name. Mark the DD file after each room.</p>
                 <div className="list" style={{ marginTop: 10 }}>
                   {data.livePortals.sanctions.map((s) => (
                     <a key={s.name} href={s.url} target="_blank" rel="noreferrer" className="row" style={{ textDecoration: "none" }}>
@@ -186,7 +269,7 @@ export default function VerifyPage() {
                 </div>
               </div>
 
-              <div className="section-title">Registries for this search</div>
+              <div className="section-title">National register rooms</div>
               <div className="card">
                 {data.livePortals.registries.map((r) => (
                   <div key={r.name} style={{ marginBottom: 8 }}>
@@ -209,19 +292,13 @@ export default function VerifyPage() {
 
               <div style={{ marginTop: 12 }}>
                 <button className="secondary" onClick={() => {
-                  const id = saveCase({ name: q, country, snapshot: { query: q } });
-                  window.location.href = `/diligence?id=${id}`;
+                  window.location.href = `/diligence?id=${saveCase({ name: q, country, snapshot: { query: q } })}`;
                 }}>Save this name as a file</button>
               </div>
+              <p className="muted"><Link href="/sources">See every connected platform</Link></p>
             </aside>
           </div>
         </>
-      )}
-
-      {!data && (
-        <div className="card muted">
-          Try <Link href="/verify">Metro</Link>, a supermarket group, or a local importer name. Add a country code to tighten the LEI filter.
-        </div>
       )}
     </main>
   );
