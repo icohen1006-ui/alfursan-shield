@@ -119,6 +119,32 @@ export default function VerifyPage() {
           </div>
           {data.coverageNote && <div className="card muted" style={{ marginBottom: 16 }}>{data.coverageNote}</div>}
 
+          {data.legal && (
+            <div className="card" style={{ marginBottom: 16, borderColor: data.legal.level === "high" ? "#9b2c2c" : data.legal.level === "review" ? "#b7791f" : undefined }}>
+              <div className="chips">
+                <span className={`pill ${data.legal.level === "high" ? "bad" : data.legal.level === "review" ? "warn" : "live"}`}>
+                  {data.legal.level === "high" ? "Legal notice" : data.legal.level === "review" ? "Review" : "No public hit"}
+                </span>
+              </div>
+              <p style={{ marginBottom: 6 }}><strong>{data.legal.headline}</strong></p>
+              <p className="muted">{data.legal.disclaimer}</p>
+              {data.legal.hits?.length > 0 && (
+                <div className="list" style={{ marginTop: 10 }}>
+                  {data.legal.hits.slice(0, 8).map((h, i) => (
+                    <a key={`${h.url}-${i}`} className="row" href={h.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                      <div>
+                        <h3>{h.title}</h3>
+                        <div className="muted">{h.source}{h.date ? ` · ${h.date}` : ""}</div>
+                        {h.detail && <div className="muted">{h.detail}</div>}
+                      </div>
+                      <span className={`pill ${h.severity === "high" ? "bad" : "warn"}`}>{h.severity}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid-2">
             <div>
               <div className="section-title">GLEIF legal entities — worldwide</div>
@@ -274,6 +300,20 @@ export default function VerifyPage() {
                   ))}
                 </div>
               </div>
+
+              {data.legal?.rooms?.length > 0 && (
+                <>
+                  <div className="section-title">Court and insolvency rooms</div>
+                  <div className="card">
+                    {data.legal.rooms.map((r) => (
+                      <div key={r.name} style={{ marginBottom: 8 }}>
+                        <a href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
+                        <div className="muted">{r.owner}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
               <div className="section-title">National register rooms</div>
               <div className="card">

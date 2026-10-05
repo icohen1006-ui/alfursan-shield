@@ -1,4 +1,5 @@
 import { searchGleif, searchNational, searchOpenSanctions, searchWikidata } from "../../../lib/live";
+import { screenLegal } from "../../../lib/legal";
 import { REGISTRIES, SANCTIONS_PLATFORMS, TRADE_PLATFORMS, jurisdictionRisk } from "../../../lib/catalog";
 
 export const dynamic = "force-dynamic";
@@ -9,11 +10,12 @@ export async function GET(req) {
   const country = (searchParams.get("country") || "").trim().toUpperCase();
   if (q.length < 2) return Response.json({ error: "Enter at least 2 characters." }, { status: 400 });
 
-  const [gleif, wiki, national, os] = await Promise.all([
+  const [gleif, wiki, national, os, legal] = await Promise.all([
     searchGleif(q, country || undefined),
     searchWikidata(q),
     searchNational(q, country),
     searchOpenSanctions(q),
+    screenLegal(q, country),
   ]);
 
   const livePortals = {
@@ -32,12 +34,14 @@ export async function GET(req) {
       gleif: { live: gleif.ok, status: gleif.status, count: gleif.rows.length, error: gleif.error || null },
       wikidata: { live: wiki.ok, status: wiki.status, count: wiki.rows.length },
       opensanctions: { live: os.ok, configured: os.configured, count: (os.rows || []).length, portal: os.portal },
+      ...legal.sources,
       ...national.sources,
     },
     companies: gleif.rows,
     national: national.rows,
     encyclopedia: wiki.rows,
     watchlistHits: os.rows || [],
+    legal,
     livePortals,
     coverageNote: country === "EG"
       ? "Egypt is live: GLEIF for any Egyptian LEI, plus GAFI, commercial registry, tax card and NFSA rooms. Private companies without an LEI still need a current Mostakhrag extract for directors and owners."
