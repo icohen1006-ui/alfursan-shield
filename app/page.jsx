@@ -40,7 +40,7 @@ export default function HomePage() {
         <div className="card">
           <div className="pill live">Live data layer on</div>
           <p className="muted" style={{ marginTop: 10 }}>
-            GLEIF LEI · Wikidata · France INSEE · Norway Brreg · EU VIES VAT · official OFAC, OFSI, EU, UN, World Bank and food-safety portals.
+            GLEIF identity · France, Norway and US filings · Egypt LEI file · UK insolvency · French court proceedings · EU VAT · sanctions rooms.
           </p>
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <Link className="btn" href="/verify">Start a check</Link>
@@ -66,7 +66,7 @@ export default function HomePage() {
         </div>
         <div className="card">
           <h3>2. Screen the same hour</h3>
-          <p className="muted">One click opens OFAC, UK OFSI, EU, UN, World Bank and OpenSanctions against the exact name. Optional OpenSanctions API key enables inline hits.</p>
+          <p className="muted">Sanctions rooms open on the name. UK insolvency notices, French collective proceedings and US opinions that name the company are flagged in the result, with the source link.</p>
         </div>
         <div className="card">
           <h3>3. File a decision</h3>

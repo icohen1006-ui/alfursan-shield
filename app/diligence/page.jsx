@@ -94,7 +94,7 @@ export default function DiligencePage() {
         <div>
           <div className="card" style={{ display: "grid", gap: 8, marginBottom: 16 }}>
             <input value={form.name} onChange={(e) => upsert({ name: e.target.value })} placeholder="Counterparty legal name" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <div className="form-3">
               <input value={form.country} onChange={(e) => upsert({ country: e.target.value.toUpperCase() })} placeholder="ISO country" />
               <input value={form.lei} onChange={(e) => upsert({ lei: e.target.value.toUpperCase() })} placeholder="LEI" />
               <select value={form.role} onChange={(e) => upsert({ role: e.target.value })}>

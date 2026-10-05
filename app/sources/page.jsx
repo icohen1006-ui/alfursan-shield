@@ -19,7 +19,12 @@ export default function SourcesPage() {
         <div className="card"><h3>France INSEE</h3><p className="muted">Live SIREN search via recherche-entreprises.api.gouv.fr.</p></div>
         <div className="card"><h3>Norway Brreg</h3><p className="muted">Live Enhetsregisteret when the country filter is NO.</p></div>
         <div className="card"><h3>EU VIES</h3><p className="muted">Official VAT existence check for EU counterparties.</p></div>
-        <div className="card"><h3>OpenSanctions</h3><p className="muted">Portal always linked. Inline hits if OPENSANCTIONS_API_KEY is set on the host.</p></div>
+        <div className="card"><h3>US SEC EDGAR</h3><p className="muted">Listed-company identity, filings and annual accounts.</p></div>
+        <div className="card"><h3>UK Gazette</h3><p className="muted">Insolvency and winding-up notices, matched to the name.</p></div>
+        <div className="card"><h3>France BODACC</h3><p className="muted">Collective proceedings only. Ordinary account filings are ignored.</p></div>
+        <div className="card"><h3>US CourtListener</h3><p className="muted">Opinions that name the company. A one-word name must also sit next to a corporate suffix.</p></div>
+        <div className="card"><h3>Egypt</h3><p className="muted">GLEIF for Egyptian LEIs, plus GAFI, tax, commercial registry and NFSA rooms. No public directors API.</p></div>
+        <div className="card"><h3>OpenSanctions</h3><p className="muted">Portal always linked. Inline hits if an API key is set on the host.</p></div>
       </div>
 
       <div className="section-title">Sanctions & debarment — live official search</div>

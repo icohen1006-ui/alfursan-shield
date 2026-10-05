@@ -120,7 +120,7 @@ export default function VerifyPage() {
           {data.coverageNote && <div className="card muted" style={{ marginBottom: 16 }}>{data.coverageNote}</div>}
 
           {data.legal && (
-            <div className="card" style={{ marginBottom: 16, borderColor: data.legal.level === "high" ? "#9b2c2c" : data.legal.level === "review" ? "#b7791f" : undefined }}>
+            <div className={`card alert alert-${data.legal.level}`}>
               <div className="chips">
                 <span className={`pill ${data.legal.level === "high" ? "bad" : data.legal.level === "review" ? "warn" : "live"}`}>
                   {data.legal.level === "high" ? "Legal notice" : data.legal.level === "review" ? "Review" : "No public hit"}

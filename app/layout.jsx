@@ -42,6 +42,10 @@ export default function RootLayout({ children }) {
             </details>
           </header>
           {children}
+          <footer className="site-footer">
+            <span>AL FURSAN Ltd · counterpart desk · not a law firm opinion</span>
+            <span>Sources are official registers. A name match is not a finding.</span>
+          </footer>
         </div>
       </body>
     </html>
